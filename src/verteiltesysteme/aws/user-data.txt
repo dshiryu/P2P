@@ -1,0 +1,71 @@
+#!/bin/bash
+
+# this script will be run during the boot process by each VertSys instance created
+# in AWS currently this is a plain bash script that requires a RedHat based image
+# (AMI) could be ported to cloud-init for better compatibility with other Linux
+# distros
+#
+# see https://docs.aws.amazon.com/de_de/AWSEC2/latest/UserGuide/user-data.html
+
+# Config
+SCRIPT_ROOT_PATH="/tmp/init-script"
+VERTSYS_PATH="$SCRIPT_ROOT_PATH/verteilte-systeme-bsc-ai-examples/VerteilteSysteme-Examples/build/"
+#JARS = "TCPServer.jar TCPServerMulti.jar UDPServer.jar UDPServerMulti.jar UDPTimeCounterServer.jar TCPTimeCounterServer.jar TCPPerfServer.jar"
+JARS="TCPServer.jar TCPPerfServer.jar UDPServer.jar UDPTimeCounterServer.jar TCPTimeCounterServer.jar TCPTimeCounterRESTServer.jar"
+REPO="https://gogs.informatik.hs-fulda.de/srieger/verteilte-systeme-bsc-ai-examples.git"
+
+# Create path to run the script
+mkdir $SCRIPT_ROOT_PATH
+cd $SCRIPT_ROOT_PATH
+
+# fetch user-data (should be the content of this script itself ;)) to be able check it later and run it again
+wget http://169.254.169.254/latest/user-data
+chmod +x user-data
+wget http://169.254.169.254/latest/meta-data/placement/availability-zone
+
+# setting console prompt to include location (availability zone and region in AWS)
+echo "PS1='[\u@\h@\e[32m`cat /tmp/init-script/availability-zone`\e[32m \W]$ '" >>/root/.bashrc
+echo "PS1='[\u@\h@\e[32m`cat /tmp/init-script/availability-zone`\e[39m \W]$ '" >>/home/ec2-user/.bashrc
+
+# wait for internet connection, should not be necessary, but just in case ;)
+while ! ping -c 1 -W 1 8.8.8.8; do
+    echo "Waiting for 8.8.8.8 - network interface might be down..."
+    sleep 1
+done
+
+# installation of required packages
+echo "Installing packages..."
+sudo yum update -y
+sudo yum install -y java git
+#rm -rf verteilte-systeme-bsc-ai-examples
+if [ ! -d $VERTSYS_PATH ]; then
+  echo "Cloning repo..."
+  git clone $REPO
+fi
+
+# killall running screens, .e.g to cleanup if script is run again after boot
+killall screen
+# start all jars
+echo "Starting JARS: ${JARS}..."
+for JAR in $JARS; do
+  echo "Starting ${JAR}..."
+  sudo screen -dmS $JAR -L java -jar $VERTSYS_PATH/$JAR
+done
+
+# wait a second, to allow java services to start
+sleep 1
+
+# output status of ports 36000-36199 and all running processes
+echo "Status:"
+sudo netstat -taupen | grep 36[0,1][0-9][0-9]
+sudo ps aux | grep java
+
+# Example for path and contents:
+#
+# ./verteilte-systeme-bsc-ai-examples/VerteilteSysteme-Examples/build/
+#
+#build-server-jars.xml                TCPServerMulti.jar
+#RMIEchoServer.jar                    UDPServer.jar
+#RMIMandelbrotCalculationsServer.jar  UDPServerMulti.jar
+#TCPPerfServer.jar                    UDPTimeCounterServer.jar
+#TCPServer.jar

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="all" name="Create Runnable Jar for Servers in Project VerteilteSysteme-Examples">
+	<!--this file was created by Eclipse Runnable JAR Export Wizard-->
+	<!--ANT 1.7 is required                                        -->
+	<!--define folder properties-->
+	<property name="dir.buildfile" value=".." />
+	<property name="dir.workspace" value=".." />
+	<property name="dir.jarfile" value="." />
+
+	<target name="all" depends="create_run_jar_tcpserver, create_run_jar_udpserver, create_run_jar_tcpservermulti, create_run_jar_udpservermulti, create_run_jar_udptimecounterserver, create_run_jar_tcpperfserver, create_run_jar_rmiechoserver, create_run_jar_rmimandelbrotcalculationsserver, create_run_jar_tcptimecounterserver, create_run_jar_tcptimecounterrestserver">
+	</target>
+
+	<target name="create_run_jar_tcpserver">
+		<jar destfile="${dir.jarfile}/TCPServer.jar" filesetmanifest="mergewithoutmain">
+			<manifest>
+				<attribute name="Main-Class" value="verteiltesysteme.socket.simple.TCPServer" />
+				<attribute name="Class-Path" value="." />
+			</manifest>
+			<fileset dir="${dir.buildfile}/bin" />
+		</jar>
+	</target>
+
+	<target name="create_run_jar_udpserver">
+		<jar destfile="${dir.jarfile}/UDPServer.jar" filesetmanifest="mergewithoutmain">
+			<manifest>
+				<attribute name="Main-Class" value="verteiltesysteme.socket.simple.UDPServer" />
+				<attribute name="Class-Path" value="." />
+			</manifest>
+			<fileset dir="${dir.buildfile}/bin" />
+		</jar>
+	</target>
+
+	<target name="create_run_jar_tcpservermulti">
+		<jar destfile="${dir.jarfile}/TCPServerMulti.jar" filesetmanifest="mergewithoutmain">
+			<manifest>
+				<attribute name="Main-Class" value="verteiltesysteme.socket.multithread.TCPServerMulti" />
+				<attribute name="Class-Path" value="." />
+			</manifest>
+			<fileset dir="${dir.buildfile}/bin" />
+		</jar>
+	</target>
+
+	<target name="create_run_jar_udpservermulti">
+		<jar destfile="${dir.jarfile}/UDPServerMulti.jar" filesetmanifest="mergewithoutmain">
+			<manifest>
+				<attribute name="Main-Class" value="verteiltesysteme.socket.multithread.UDPServerMulti" />
+				<attribute name="Class-Path" value="." />
+			</manifest>
+			<fileset dir="${dir.buildfile}/bin" />
+		</jar>
+	</target>
+
+	<target name="create_run_jar_udptimecounterserver">
+		<jar destfile="${dir.jarfile}/UDPTimeCounterServer.jar" filesetmanifest="mergewithoutmain">
+			<manifest>
+				<attribute name="Main-Class" value="verteiltesysteme.socket.timecounter.UDPTimeCounterServer" />
+				<attribute name="Class-Path" value="." />
+			</manifest>
+			<fileset dir="${dir.buildfile}/bin" />
+		</jar>
+	</target>
+
+	<target name="create_run_jar_tcpperfserver">
+		<jar destfile="${dir.jarfile}/TCPPerfServer.jar" filesetmanifest="mergewithoutmain">
+			<manifest>
+				<attribute name="Main-Class" value="verteiltesysteme.socket.perf.TCPPerfServer" />
+				<attribute name="Class-Path" value="." />
+			</manifest>
+			<fileset dir="${dir.buildfile}/bin" />
+		</jar>
+	</target>
+
+	<target name="create_run_jar_rmiechoserver">
+		<jar destfile="${dir.jarfile}/RMIEchoServer.jar" filesetmanifest="mergewithoutmain">
+			<manifest>
+				<attribute name="Main-Class" value="verteiltesysteme.rmi.RMIEchoServer" />
+				<attribute name="Class-Path" value="." />
+			</manifest>
+			<fileset dir="${dir.buildfile}/bin" />
+		</jar>
+	</target>
+
+	<target name="create_run_jar_rmimandelbrotcalculationsserver">
+		<jar destfile="${dir.jarfile}/RMIMandelbrotCalculationsServer.jar" filesetmanifest="mergewithoutmain">
+			<manifest>
+				<attribute name="Main-Class" value="verteiltesysteme.mandelbrot.rmi.RMIMandelbrotCalculationsServer" />
+				<attribute name="Class-Path" value="." />
+			</manifest>
+			<fileset dir="${dir.buildfile}/bin" />
+		</jar>
+	</target>
+
+	<target name="create_run_jar_tcptimecounterserver">
+		<jar destfile="${dir.jarfile}/TCPTimeCounterServer.jar" filesetmanifest="mergewithoutmain">
+			<manifest>
+				<attribute name="Main-Class" value="verteiltesysteme.aws.TCPTimeCounterServer" />
+			</manifest>
+			<fileset dir="${dir.buildfile}/bin" />
+			<zipgroupfileset dir="${dir.buildfile}/lib-aws" includes="*.jar" />
+		</jar>
+	</target>
+
+	<target name="create_run_jar_tcptimecounterrestserver">
+		<jar destfile="${dir.jarfile}/TCPTimeCounterRESTServer.jar" filesetmanifest="mergewithoutmain">
+			<manifest>
+				<attribute name="Main-Class" value="verteiltesysteme.aws.TCPTimeCounterRESTServer" />
+			</manifest>
+			<fileset dir="${dir.buildfile}/bin" />
+			<zipgroupfileset dir="${dir.buildfile}/lib-aws" includes="*.jar" />
+			<zipgroupfileset dir="${dir.buildfile}/lib" includes="*.jar" />
+		</jar>
+	</target>
+	
+	
+</project>
