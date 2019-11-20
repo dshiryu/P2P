@@ -2,35 +2,53 @@ package verteiltesysteme.socket;
 
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
+import java.util.List;
 
-public class P2PNode implements Runnable {
-	Socket connectionSocket;
+public class P2PNode {
+	
 
-	P2PNode(Socket connectionSocket) {
-		this.connectionSocket = connectionSocket;
-	}
-
-	public static void main(String argv[]) throws Exception {
+	public static void main(String args[]) throws Exception {
 		// sets connection information
 		String hostname = "localhost";
 		int tcpPort = 13337;
 		boolean leader = false;
 		
+		//sets the file information
+		
+		//String entrypointListFile = "/home/suess/P2P/EntryGr1.dat"; //linux
+		String peerList = "EntryGr1.dat"; //windows
+		List<SocketAddress> availablePeers = new ArrayList<SocketAddress>();
+		String localIP = InetAddress.getLocalHost().toString().split("/")[1];
+		
+		
 		// starts connection as Client, checks if it's the leader
 		try (Socket usedPort = new Socket("localhost", tcpPort)) {
-		
 			System.out.println("There is already a leader.");
 		
-		} catch (IOException usedPort) {
-	        
-			System.out.println("There was no leader, creating server...");
+		} catch (IOException usedPort) { 
+	        System.out.println("There was no leader, creating server...");
 	        leader = true;
 	    }
 		
-		
-		
+		// writes the current socket on the file
+		try {
+			FileOutputStream outputStream = new FileOutputStream(peerList);
+			try {
+				try {
+					String ip = localIP + ":" + tcpPort + "\n";
+					byte[] strToBytes = ip.getBytes();
+				    outputStream.write(strToBytes);
+				} catch (Throwable e) {
+					e.printStackTrace();
+				}
+			} finally {
+				outputStream.close();
+			}
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
 	
-		
 		// starts connection as Server
 		if (leader == true) {
 			@SuppressWarnings("resource")
@@ -38,9 +56,10 @@ public class P2PNode implements Runnable {
 	
 			while (true) {
 				Socket connectionSocket = welcomeSocket.accept();
-				new Thread(new P2PNode(connectionSocket)).start();
-				
+				P2PServerSide ss = new P2PServerSide(connectionSocket);
+				ss.start();
 			}
+			
 		} else {
 			String sentence;
 			String modifiedSentence;
@@ -58,29 +77,6 @@ public class P2PNode implements Runnable {
 			modifiedSentence = inFromServer.readLine();
 			System.out.println("FROM SERVER: " + modifiedSentence);
 			clientSocket.close();
-		}
-		
-		
-		
-		
-		
-	}
-
-	// this does the server things
-	public void run() {
-		String clientSentence;
-		String capitalizedSentence;
-
-		BufferedReader inFromClient;
-		try {
-			inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
-			DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
-
-			clientSentence = inFromClient.readLine();
-			capitalizedSentence = clientSentence.toUpperCase() + '\n';
-			outToClient.writeBytes(capitalizedSentence);
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
 		
 	}
