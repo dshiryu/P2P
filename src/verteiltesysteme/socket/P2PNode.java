@@ -8,7 +8,7 @@ import java.util.List;
 public class P2PNode {
 	
 
-	public static void main(String args[]) throws Exception {
+	public static void main(String argv[]) throws Exception {
 		// sets connection information
 		String hostname = "localhost";
 		int tcpPort = 13337;
@@ -31,23 +31,7 @@ public class P2PNode {
 	        leader = true;
 	    }
 		
-		// writes the current socket on the file
-		try {
-			FileOutputStream outputStream = new FileOutputStream(peerList);
-			try {
-				try {
-					String ip = localIP + ":" + tcpPort + "\n";
-					byte[] strToBytes = ip.getBytes();
-				    outputStream.write(strToBytes);
-				} catch (Throwable e) {
-					e.printStackTrace();
-				}
-			} finally {
-				outputStream.close();
-			}
-		} catch (Throwable e) {
-			e.printStackTrace();
-		}
+		
 	
 		// starts connection as Server
 		if (leader == true) {
@@ -64,19 +48,28 @@ public class P2PNode {
 			String sentence;
 			String modifiedSentence;
 
-			BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
-			Socket clientSocket = new Socket(hostname, tcpPort);
-
-			DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
-			BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-
-			System.out.println("Enter message to sent to the server:");
+			while(true) {
+				BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
+				Socket clientSocket = new Socket(hostname, tcpPort);
+	
+				DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
+				BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+	
+				System.out.println("Enter message to sent to the server:");
+				
+				sentence = inFromUser.readLine();
+				
+				if(sentence.equals("quit")) {
+					System.exit(0);
+				}
+				
+				outToServer.writeBytes(sentence + '\n');
+				modifiedSentence = inFromServer.readLine();
+				System.out.println("FROM SERVER: " + modifiedSentence);
+				clientSocket.close();
+				
+			}
 			
-			sentence = inFromUser.readLine();
-			outToServer.writeBytes(sentence + '\n');
-			modifiedSentence = inFromServer.readLine();
-			System.out.println("FROM SERVER: " + modifiedSentence);
-			clientSocket.close();
 		}
 		
 	}
