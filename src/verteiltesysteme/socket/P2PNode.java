@@ -16,6 +16,9 @@ public class P2PNode {
 		static boolean clientPortAvailable = false;
 		static boolean serverPortAvailable = false;
 		static boolean leader = false;
+		
+		//InetAddress inetAddress = InetAddress.getLocalHost();
+		static String hostname;// = inetAddress.getHostAddress();
 
 	public static void main(String argv[]) throws Exception {
 		
@@ -24,17 +27,40 @@ public class P2PNode {
 		//String entrypointListFile = "/home/suess/P2P/EntryGr1.dat"; //linux
 		String peerList = "EntryGr1.dat"; //windows
 		List<SocketAddress> availablePeers = new ArrayList<SocketAddress>();
-		String localIP = InetAddress.getLocalHost().toString().split("/")[1];
+		String givenIP = InetAddress.getLocalHost().toString().split("/")[1];
 		
-		// sets hostname as the local IP address
-		InetAddress inetAddress = InetAddress.getLocalHost();
-		String hostname = inetAddress.getHostAddress();
 		
+		// sets hostname as the IP address typed
 		while(!clientPortAvailable) {
+			// uses already set configuration or set an IP
+			System.out.println("Local test (y/n)?");
+			BufferedReader answerIP = new BufferedReader(new InputStreamReader(System.in)); // gets input
+			String aIP = answerIP.readLine();
+			
+			if (aIP.toLowerCase().equals("y")) {
+				System.out.println("Local test confirmed. \n");
+				InetAddress inetAddress = InetAddress.getLocalHost();
+				hostname = inetAddress.getHostAddress();
+				
+			} else if (aIP.toLowerCase().equals("n")) {
+				// gets IP
+				System.out.println("External connection, type the destination IP:");
+				BufferedReader clientIP = new BufferedReader(new InputStreamReader(System.in)); // gets input
+				hostname = clientIP.readLine();
+				
+			} else {
+				System.out.println("Command not recognized, try again.");
+			}
+			
+			
+			
+			
+			
 			// port to connect to
 			System.out.println("Connect to port# as client:");
 			BufferedReader clientBR = new BufferedReader(new InputStreamReader(System.in)); // gets input
 			cPort = clientBR.readLine(); 
+			System.out.println("Checking availability...");
 			
 			try { // checks if it's a int of string
 				clientPort = Integer.parseInt(cPort); // convert to int
@@ -80,7 +106,7 @@ public class P2PNode {
 			
 		// gets input for server port number and checks if it is available and if it was typed correctly
 		while(!serverPortAvailable) {
-			System.out.println("Open port# as server:");
+			System.out.println("Insert which port# should be opened as a server:");
 			BufferedReader serverBR = new BufferedReader(new InputStreamReader(System.in));
 			sPort = serverBR.readLine();
 			
@@ -102,15 +128,17 @@ public class P2PNode {
 		}
 		
 		// new thread to connect to the client port
-		Thread t = new Thread() {
-			
-			@Override
-			public void run() {
+		
+		if(clientPortAvailable) {
+			Thread t = new Thread() {
 				
-				while(true) {
+				@Override
+				public void run() {
 					
-					if(clientPortAvailable) {
+					while(true) {
+						
 						try {
+							@SuppressWarnings({ "resource", "unused" })
 							Socket s = new Socket(hostname, clientPort); // starts connection
 						} catch (IOException e) {
 							e.printStackTrace();
@@ -131,9 +159,9 @@ public class P2PNode {
 						}
 					}
 				}
-			}
-		};
+			};
 		t.start(); // without this the thread won't do anything
+		}
 		 
 		// Starting the server side
 		System.out.println("Opening port# " + serverPort +". Waiting for external input... \n");
