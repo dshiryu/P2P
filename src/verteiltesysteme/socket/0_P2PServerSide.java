@@ -13,30 +13,24 @@ public class P2PServerSide extends Thread {
 
 	P2PServerSide(Socket connectionSocket) {
 		this.connectionSocket = connectionSocket;
+		Thread ss = new Thread();
 	}
 	
-	@Override
 	public void run() {
 		String clientSentence;
 		String capitalizedSentence;
 		BufferedReader inFromClient;
-		
 		
 		try {
 			inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
 			DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
 
 			clientSentence = inFromClient.readLine();
-			if(clientSentence != null) {
-				capitalizedSentence = clientSentence.toUpperCase() + '\n';
-				outToClient.writeBytes(capitalizedSentence);
-			}
-				
-			
+			capitalizedSentence = clientSentence.toUpperCase() + '\n';
+			outToClient.writeBytes(capitalizedSentence);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
 		
 	} 
 }
