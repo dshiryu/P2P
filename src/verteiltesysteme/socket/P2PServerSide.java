@@ -5,7 +5,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
-import java.util.*;
 
 public class P2PServerSide extends Thread {
 	
@@ -20,8 +19,7 @@ public class P2PServerSide extends Thread {
 		String clientSentence;
 		String capitalizedSentence;
 		BufferedReader inFromClient;
-		
-		
+				
 		try {
 			inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
 			DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
@@ -32,11 +30,15 @@ public class P2PServerSide extends Thread {
 				outToClient.writeBytes(capitalizedSentence);
 			}
 				
-			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		
-		
+		try {
+			sleep(10);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	} 
 }

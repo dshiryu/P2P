@@ -13,7 +13,8 @@ public class P2PNode {
 		static int clientPort; // to save the converted string into int from BufferedReader
 		static int serverPort;
 		
-		static boolean portAvailable = false;
+		static boolean clientPortAvailable = false;
+		static boolean serverPortAvailable = false;
 		static boolean leader = false;
 
 	public static void main(String argv[]) throws Exception {
@@ -25,111 +26,161 @@ public class P2PNode {
 		List<SocketAddress> availablePeers = new ArrayList<SocketAddress>();
 		String localIP = InetAddress.getLocalHost().toString().split("/")[1];
 		
+		// sets hostname as the local IP address
 		InetAddress inetAddress = InetAddress.getLocalHost();
 		String hostname = inetAddress.getHostAddress();
 		
-		// port to connect to
-		System.out.println("Connect to port:");
-		BufferedReader clientBR = new BufferedReader(new InputStreamReader(System.in));
-		cPort = clientBR.readLine();
-		clientPort = Integer.parseInt(cPort);
+		while(!clientPortAvailable) {
+			// port to connect to
+			System.out.println("Connect to port# as client:");
+			BufferedReader clientBR = new BufferedReader(new InputStreamReader(System.in)); // gets input
+			cPort = clientBR.readLine(); 
+			
+			try { // checks if it's a int of string
+				clientPort = Integer.parseInt(cPort); // convert to int
 				
-		// open a port to receive connections
-		System.out.println("Open port:");
-		BufferedReader serverBR = new BufferedReader(new InputStreamReader(System.in));
-		sPort = clientBR.readLine();
-		serverPort = Integer.parseInt(sPort);
-		
-		
-		
-		
-		// checks if the first given port is open or not
-		try {
-			(new Socket(hostname, clientPort)).close();
-		    portAvailable = true;
-		    System.out.println("Connecting to " + clientPort);
-		} catch(SocketException e) {
-			System.out.println("Port " + clientPort + " isn't open");
+				try { // checks if the first given port is open or not
+					(new Socket(hostname, clientPort)).close();
+					clientPortAvailable = true;
+				    System.out.println("Connecting to " + clientPort + ". \n");
+				    
+				} catch(SocketException e) { // if the connection wasn't successful, checks if the user wants to try again
+					System.out.println("Port " + clientPort + " isn't responding. Do you want to try another (y/n)?");
+					
+					BufferedReader clientPortTryAgain = new BufferedReader(new InputStreamReader(System.in));
+					String clientPortAnswer = clientPortTryAgain.readLine();
+					
+					if (clientPortAnswer.toLowerCase().equals("n")) {
+						System.out.println("Giving up... \n");
+						
+						
+						
+						// TO-DO: check if there's the leader
+						
+						/*if (leader == true) {
+						//something
+						
+						} else {
+						
+						}*/
+						
+						
+						
+						break;
+					} else if (clientPortAnswer.toLowerCase().equals("y")) {
+						System.out.print("Type again. \n\n");
+					} else {
+						System.out.println("Command not recognized, try again.");
+					}
+				} 
+			} catch (NumberFormatException e) {
+				System.out.println("Wrong input, please try a port number. \n");
+		    }
+		}
+			
+		// gets input for server port number and checks if it is available and if it was typed correctly
+		while(!serverPortAvailable) {
+			System.out.println("Open port# as server:");
+			BufferedReader serverBR = new BufferedReader(new InputStreamReader(System.in));
+			sPort = serverBR.readLine();
+			
+			try {
+				serverPort = Integer.parseInt(sPort);
+				
+				try {
+					(new ServerSocket(serverPort)).close();
+					serverPortAvailable = true;
+					
+				} catch(SocketException e) {
+					System.out.println("Port " + serverPort + " is already being used, try another.\n");
+					
+				}
+			} catch (NumberFormatException e) {
+				System.out.println("Wrong input, please try a port number.");
+				
+		    }
 		}
 		
-		
-		// if the port is open, connect to it, in both cases the server connection with the second port should open (new thread?)
-		
+		// new thread to connect to the client port
 		Thread t = new Thread() {
+			
 			@Override
 			public void run() {
-				if(portAvailable) {
-				try {
-					Socket s = new Socket(hostname, clientPort);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				try {
-					sendToServer();
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				
+				while(true) {
+					
+					if(clientPortAvailable) {
+						try {
+							Socket s = new Socket(hostname, clientPort); // starts connection
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+						
+						try { // starts sequence that sends requests to the server
+							sendToServer();
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+						
+						// yields for a short time so the server can also work on the response, otherwise the code stops here
+						// and no further responses are given
+						try {
+							sleep(10);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+					}
 				}
 			}
-			
 		};
-		t.start();
+		t.start(); // without this the thread won't do anything
 		 
-		
-		System.out.println("Opening port " + serverPort +" to external connections" );
+		// Starting the server side
+		System.out.println("Opening port# " + serverPort +". Waiting for external input... \n");
+				
 		@SuppressWarnings("resource")
-		ServerSocket welcomeSocket = new ServerSocket(serverPort);
-		Socket connectionSocket = welcomeSocket.accept();
+		ServerSocket welcomeSocket = new ServerSocket(serverPort); // starts the server socket
+		
 		while(true) {
-			P2PServerSide ss = new P2PServerSide(connectionSocket);
+			Socket connectionSocket = welcomeSocket.accept(); // makes the server receive requests
+			P2PServerSide ss = new P2PServerSide(connectionSocket); // instance the server response into a new thread
 			ss.start();
 		}
-		
-		
-		
-		
-		
-		/*if (leader == true) {
-			//something
-			
-		} else {
-			
-		}*/
-		
 	}
 	
 	public static void sendToServer() throws Exception {
-		String sentence;
-		String modifiedSentence;
+		
 		// here repeated the IP detection, tried using it as static but the methods weren't working
 		InetAddress inetAddress = InetAddress.getLocalHost();
 		String hostname = inetAddress.getHostAddress();
 
-		while(true) {
-			BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
-			Socket clientSocket = new Socket(hostname, serverPort);
-
-			DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
-			BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-
-			System.out.println("Enter message to sent to the server:");
-			
-			sentence = inFromUser.readLine();
-			
-			if(sentence.equals("quit")) {
-				System.exit(0);
-			}
-			
-			outToServer.writeBytes(sentence + '\n');
-			modifiedSentence = inFromServer.readLine();
-			System.out.println("FROM SERVER: " + modifiedSentence);
-			//clientSocket.close();
+		// connects to the given socket
+		Socket clientSocket = new Socket(hostname, serverPort);
+		
+		// variables to store user input
+		String sentence;
+		String modifiedSentence;
+		
+		// gets input
+		BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
+		
+		// sends data to server and get its response
+		DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
+		BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+		System.out.println("Enter message to sent to the server:");
+		sentence = inFromUser.readLine();
+		outToServer.writeBytes(sentence + '\n');
+		
+		// prints answer from the server
+		modifiedSentence = inFromServer.readLine();
+		System.out.println("FROM SERVER: " + modifiedSentence);
+		
+		if(sentence.equals("quit")) {
+			System.out.println("Connection closed.");
+			System.exit(0);
 			
 		}
+		//clientSocket.close(); // this was on the original code from socket.multithread, but there it breaks everything
 	}
-	
-	
 
 }
